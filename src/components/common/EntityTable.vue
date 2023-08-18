@@ -93,6 +93,10 @@
             <slot> {{ item.columns.totalPrice }}$ </slot>
           </template>
 
+          <template #[`item.hidden`]="{ item }">
+            <icon-hidden-product v-if="item.columns.hidden"/>
+          </template>
+
           <template #[`item.actions`]="{ item }">
             <v-btn icon elevation="0" @click="showDialog(item.raw)">
               <v-icon> mdi-pencil-box-outline </v-icon>
@@ -126,7 +130,7 @@ import TableHeader from './TableHeader.vue';
 import Pagination from './Pagination.vue';
 import { VDataTableServer } from 'vuetify/labs/components';
 import Entity from '@/models/entities/Entity';
-
+import IconHiddenProduct from './IconHiddenProduct.vue';
 interface TableOptions {
   itemsPerPage: number;
   page: number;
@@ -147,6 +151,7 @@ const Component = defineComponent({
   name: 'EntityTable',
 
   components: {
+    IconHiddenProduct,
     VDataTableServer,
     TableHeader,
     Pagination,
