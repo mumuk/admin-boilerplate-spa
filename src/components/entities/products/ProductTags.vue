@@ -48,6 +48,7 @@ const Component = defineComponent({
   },
   emits: ['add-tag', 'remove-tag'],
 
+
   setup(props, {emit}) {
     const withAllTags = computed(() => props.allTags?.length > 0);
     const allTags = computed(() => props.allTags);
