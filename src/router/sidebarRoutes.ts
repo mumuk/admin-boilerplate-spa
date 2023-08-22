@@ -2,8 +2,10 @@ import { RouteRecordRaw } from 'vue-router';
 
 import CategoryTable from '../components/entities/categories/CategoryTable.vue';
 import CategoryDialog from '../components/entities/categories/CategoryDialog.vue';
+import TagDialog from '../components/entities/tags/TagDialog.vue';
 
 import ProductTable from '../components/entities/products/ProductTable.vue';
+import TagTable from '../components/entities/tags/TagTable.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -48,6 +50,29 @@ const routes: RouteRecordRaw[] = [
           title: 'Category',
         },
         props: { default: false, editDialog: true },
+      },
+    ],
+  },
+  {
+    path: '/tags',
+    component: TagTable,
+    name: 'Tags-Item',
+    meta: {
+      title: 'Tags',
+      icon: 'mdi-hexagon',
+      isSideBarIncludes: true,
+    },
+    children: [
+      {
+        path: 'new',
+        components: {
+          default: TagTable,
+          editDialog: TagDialog,
+        },
+        meta: {
+          title: 'New tag',
+        },
+        props: { default: false, editDialog: false },
       },
     ],
   },

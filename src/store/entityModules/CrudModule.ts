@@ -73,7 +73,6 @@ class CrudModule<Item extends Entity, ItemDTO extends Object>
     // fetch both items list and total value
     async fetchItems({ state, commit, dispatch }): Promise<void> {
       commit('setLoading', true);
-
       try {
         const apiClient = getEntityApiClient(state.entityType);
         const response = await apiClient.fetchItems(state.queryFilters);

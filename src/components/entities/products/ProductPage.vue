@@ -1,59 +1,79 @@
 <template>
   <EntityPage
-    entity-type="product"
-    :title="title"
-    :item="state.entity"
-    :loading="state.loading"
-    :is-new="isNew()"
-    :is-deletable="!isNew()"
+      entity-type="product"
+      :title="title"
+      :item="state.entity"
+      :loading="state.loading"
+      :is-new="isNew()"
+      :is-deletable="!isNew()"
   >
     <template #form-content>
       <div>
         <v-row align="start">
           <v-col cols="12">
             <v-text-field
-              v-model="state.entity.name"
-              label="Name"
-              variant="outlined"
-              required
-              hide-details="auto"
-              :rules="rules.name"
-              data-test="product-name"
+                v-model="state.entity.name"
+                label="Name"
+                variant="outlined"
+                required
+                hide-details="auto"
+                :rules="rules.name"
+                data-test="product-name"
             />
           </v-col>
           <v-col cols="12">
             <v-select
-              v-model="state.entity.categoryId"
-              label="Category ID"
-              variant="outlined"
-              hide-details="auto"
-              :items="listCategory"
-              item-title="name"
-              item-value="id"
-              data-test="product-categoryId"
+                v-model="state.entity.categoryId"
+                label="Category ID"
+                variant="outlined"
+                hide-details="auto"
+                :items="listCategory"
+                item-title="name"
+                item-value="id"
+                data-test="product-categoryId"
             />
           </v-col>
           <v-col cols="12">
             <v-text-field
-              v-model="state.entity.description"
-              label="Description"
-              variant="outlined"
-              hide-details="auto"
-              data-test="product-categoryId"
+                v-model="state.entity.description"
+                label="Description"
+                variant="outlined"
+                hide-details="auto"
+                data-test="product-categoryId"
             />
+          </v-col>
+
+          <v-col cols="12">
+            <v-chip v-for="tag in state.entity.tags" :key="tag.id">{{ tag.name }}</v-chip>
+
+          </v-col>
+          <v-col>
+            <v-autocomplete
+                v-model="state.entity.tags"
+                :items="state.entity.tags"
+                item-text="name"
+                item-value="id"
+                multiple
+                chips
+                label="Выберите теги"
+            ></v-autocomplete>
           </v-col>
         </v-row>
       </div>
     </template>
   </EntityPage>
+
+
+
+
 </template>
 
 <script lang="ts">
 import EntityPage from '@/components/common/EntityPage.vue';
-import { defineComponent, onBeforeMount, reactive, watch, computed, ref, Ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useStore } from 'vuex';
-import { Product } from '../../../models/entities/Product';
+import {defineComponent, onBeforeMount, reactive, watch, computed, ref, Ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {useStore} from 'vuex';
+import {Product} from '../../../models/entities/Product';
 
 interface State {
   entity: Product;
@@ -86,8 +106,8 @@ const Component = defineComponent({
         if (!res) router.back();
       }
       listCategory.value = await store.dispatch(
-        'categoriesModule/fetchAllItems',
-        undefined,
+          'categoriesModule/fetchAllItems',
+          undefined,
       );
     });
 
@@ -95,10 +115,11 @@ const Component = defineComponent({
       entity: product,
       loading: computed(() => store.getters['productsModule/loading']),
     }) as State;
+
     watch(
-      () => store.getters['productsModule/selectedItem'],
-      (newValue: Product) => Object.assign(product, newValue),
-      { immediate: false, deep: true },
+        () => store.getters['productsModule/selectedItem'],
+        (newValue: Product) => Object.assign(product, newValue),
+        {immediate: false, deep: true},
     );
     const title = computed(() => {
       if (state.loading) return '';
