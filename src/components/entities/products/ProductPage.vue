@@ -1,69 +1,70 @@
 <template>
   <EntityPage
-      entity-type="product"
-      :title="title"
-      :item="state.entity"
-      :loading="state.loading"
-      :is-new="isNew()"
-      :is-deletable="!isNew()"
+    entity-type="product"
+    :title="title"
+    :item="state.entity"
+    :loading="state.loading"
+    :is-new="isNew()"
+    :is-deletable="!isNew()"
   >
     <template #form-content>
       <div>
         <v-row align="start">
           <v-col cols="12">
             <v-text-field
-                v-model="state.entity.name"
-                label="Name"
-                variant="outlined"
-                required
-                hide-details="auto"
-                :rules="rules.name"
-                data-test="product-name"
+              v-model="state.entity.name"
+              label="Name"
+              variant="outlined"
+              required
+              hide-details="auto"
+              :rules="rules.name"
+              data-test="product-name"
             />
           </v-col>
           <v-col cols="12">
             <v-select
-                v-model="state.entity.categoryId"
-                label="Category ID"
-                variant="outlined"
-                hide-details="auto"
-                :items="listCategory"
-                item-title="name"
-                item-value="id"
-                data-test="product-categoryId"
+              v-model="state.entity.categoryId"
+              label="Category ID"
+              variant="outlined"
+              hide-details="auto"
+              :items="listCategory"
+              item-title="name"
+              item-value="id"
+              data-test="product-categoryId"
             />
           </v-col>
           <v-col cols="12">
             <v-text-field
-                v-model="state.entity.description"
-                label="Description"
-                variant="outlined"
-                hide-details="auto"
-                data-test="product-categoryId"
+              v-model="state.entity.description"
+              label="Description"
+              variant="outlined"
+              hide-details="auto"
+              data-test="product-categoryId"
             />
           </v-col>
 
           <v-col cols="12">
-            <v-chip v-for="tag in state.entity.tags" :key="tag.id">{{ tag.name }}</v-chip>
 
           </v-col>
-          <v-col>
-            <v-autocomplete
-                v-model="state.entity.tags"
-                :items="state.entity.tags"
-                item-text="name"
-                item-value="id"
-                multiple
-                chips
-                label="Выберите теги"
-            ></v-autocomplete>
+
+          <v-col cols="12">
+            <product-tags
+              :product-tags=state.entity.tags
+              class="border ma-3 pa-1"
+              @remove-tag="handleRemoveTag"
+
+            />
+            <product-tags
+              :product-tags=state.entity.tags
+              :all-tags="allTags"
+              @add-tag="handleAddTag"
+            />
+
           </v-col>
         </v-row>
       </div>
     </template>
   </EntityPage>
-
-
 
 
 </template>
@@ -72,8 +73,13 @@
 import EntityPage from '@/components/common/EntityPage.vue';
 import {defineComponent, onBeforeMount, reactive, watch, computed, ref, Ref} from 'vue';
 import {useRouter} from 'vue-router';
-import {useStore} from 'vuex';
+import {Store, useStore} from 'vuex';
 import {Product} from '../../../models/entities/Product';
+import ProductTags from "@/components/entities/products/ProductTags.vue";
+import {EntityType} from "@/store/entityModules/types";
+import {RootState} from "@/store/Store";
+import {getEntityStorePath} from "@/store/entityModules/utils";
+import {Tag} from "@/models/entities/Tag";
 
 interface State {
   entity: Product;
@@ -84,6 +90,7 @@ const Component = defineComponent({
   name: 'ProductDialog',
 
   components: {
+    ProductTags,
     EntityPage,
   },
 
@@ -95,31 +102,44 @@ const Component = defineComponent({
   },
 
   setup(props) {
-    const store = useStore();
+    // const store = useStore();
     const router = useRouter();
     const product = new Product({});
+    const entityType = EntityType.TAG;
+
+    const store: Store<RootState> = useStore();
+    const storePath = getEntityStorePath(entityType);
+    const productTags = computed(() => state.entity.tags);
     const isNew = () => !props.id;
     let listCategory: Ref<string[]> = ref([]);
+    let allTags: Ref<Tag[]> = ref([]);
+
     onBeforeMount(async () => {
       if (!isNew()) {
         const res = await store.dispatch(`productsModule/fetchItem`, props.id);
         if (!res) router.back();
       }
       listCategory.value = await store.dispatch(
-          'categoriesModule/fetchAllItems',
-          undefined,
+        'categoriesModule/fetchAllItems',
+        undefined,
       );
     });
+
+    onBeforeMount(async () => {
+      allTags.value = await store.dispatch('tagsModule/fetchAllItems', undefined);
+    });
+
 
     const state = reactive({
       entity: product,
       loading: computed(() => store.getters['productsModule/loading']),
+      items: computed(() => store.getters[`${storePath}/items`]),
     }) as State;
 
     watch(
-        () => store.getters['productsModule/selectedItem'],
-        (newValue: Product) => Object.assign(product, newValue),
-        {immediate: false, deep: true},
+      () => store.getters['productsModule/selectedItem'],
+      (newValue: Product) => Object.assign(product, newValue),
+      {immediate: false, deep: true},
     );
     const title = computed(() => {
       if (state.loading) return '';
@@ -131,7 +151,23 @@ const Component = defineComponent({
       name: [(v: string) => !!v || 'Name is required'],
     };
 
+    const handleAddTag = (tag: Tag) => {
+      const tagIndex = state.entity.tags.findIndex((t) => t.id === tag.id);
+      if (tagIndex !== -1) return;
+      state.entity.tags.push(tag);
+      state.entity.tagIds.push(tag.id);
+    };
+    const handleRemoveTag = (tag: Tag) => {
+      state.entity.tags = state.entity.tags.filter((t) => t.id !== tag.id);
+      state.entity.tagIds = state.entity.tagIds.filter((id) => id !== tag.id);
+    };
+
+
     return {
+      allTags,
+      productTags,
+      handleAddTag,
+      handleRemoveTag,
       state,
       title,
       rules,
@@ -143,4 +179,6 @@ const Component = defineComponent({
 export default Component;
 </script>
 
-<style scoped></style>
+<style scoped>
+
+</style>
