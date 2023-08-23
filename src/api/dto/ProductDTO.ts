@@ -6,6 +6,7 @@ export interface ProductDTO {
   categoryId?: string;
   description?: string;
   category?: CategoryDTO;
+  hidden?: boolean;
   tagIds?: string[];
   tags?: TagDTO[];
 }

@@ -6,6 +6,7 @@ export class Product implements Entity {
   public name = '';
   public categoryId = '';
   public description = '';
+  public hidden = false;
   public tagIds: string[] = [];
   public tags: Tag[] = [];
 
