@@ -44,9 +44,14 @@
           </v-col>
 
           <v-col cols="12">
+            <v-checkbox
+              v-model="state.entity.hidden"
+              label="Hidden"
+            ></v-checkbox>
+          </v-col>
+          <v-col cols="12">
 
           </v-col>
-
           <v-col cols="12">
             <product-tags
               :product-tags=state.entity.tags
@@ -161,6 +166,8 @@ const Component = defineComponent({
       state.entity.tags = state.entity.tags.filter((t) => t.id !== tag.id);
       state.entity.tagIds = state.entity.tagIds.filter((id) => id !== tag.id);
     };
+
+
 
 
     return {
