@@ -9,4 +9,5 @@ export interface ProductDTO {
   hidden?: boolean;
   tagIds?: string[];
   tags?: TagDTO[];
+  thumbnail?: string;
 }
