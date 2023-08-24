@@ -9,7 +9,7 @@ export class Product implements Entity {
   public hidden = false;
   public tagIds: string[] = [];
   public tags: Tag[] = [];
-  public thumbnail: string;
+  public thumbnail: string | ArrayBuffer;
 
   constructor(initData: Partial<Product>) {
     Object.assign(this, initData);
