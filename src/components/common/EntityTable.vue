@@ -1,97 +1,101 @@
 <template>
   <v-container fluid class="py-2">
-    <router-view name="editDialog" />
+    <router-view name="editDialog"/>
 
     <v-row>
       <v-col>
         <v-data-table-server
-          :headers="state.headers"
-          :items="state.items"
-          :items-length="state.total"
-          :items-per-page="state.options.itemsPerPage"
-          :page="state.options.page"
-          :sort-by="state.options.sortBy"
-          :search="state.options.search"
-          :loading="state.loading"
-          :hide-default-footer="true"
-          class="elevation-1"
-          @update:options="setOptions"
+            :headers="state.headers"
+            :items="state.items"
+            :items-length="state.total"
+            :items-per-page="state.options.itemsPerPage"
+            :page="state.options.page"
+            :sort-by="state.options.sortBy"
+            :search="state.options.search"
+            :loading="state.loading"
+            :hide-default-footer="true"
+            class="elevation-1"
+            @update:options="setOptions"
         >
           <template #top>
             <slot name="top">
               <TableHeader :store-path="storePath">
                 <template #left>
-                  <slot name="top-left" />
+                  <slot name="top-left"/>
                 </template>
                 <template #right>
-                  <slot name="top-right" />
+                  <slot name="top-right"/>
                 </template>
               </TableHeader>
 
-              <v-divider />
+              <v-divider/>
             </slot>
           </template>
           <template
-            v-for="header in state.editableHeaders"
-            #[`item.${header.value}`]="{ item }"
+              v-for="header in state.editableHeaders"
+              #[`item.${header.value}`]="{ item }"
           >
-            <slot :name="header.value" :item="item" />
+            <slot :name="header.value" :item="item"/>
           </template>
 
-          <template #[`item.previewImage`]="{ item }">
+          <template #[`item.thumbnail`]="{ item }">
+
             <img
-              :src="item.columns.previewImage"
-              :alt="item.columns.previewImage"
-              width="50"
-              height="50"
+                v-if="item.columns.thumbnail"
+                :src="`${BASE_API_URL}${item.columns.thumbnail}`"
+                :alt="item.columns.thumbnail.match(/-(\w+)\.jpg$/)?.[1]"
+                width="100"
+                height="100"
             />
+
           </template>
 
           <template #[`item.template`]="{ item }">
             <img
-              :src="item.columns.template"
-              :alt="item.columns.template"
-              width="50"
-              height="50"
+                :src="item.columns.template"
+                :alt="item.columns.template"
+                width="50"
+                height="50"
             />
           </template>
 
           <template #[`item.sizeQuantities`]="{ item }">
             <slot
-              v-for="(count, size) in item.columns.sizeQuantities"
-              :size="size"
-              :count="count"
+                v-for="(count, size) in item.columns.sizeQuantities"
+                :size="size"
+                :count="count"
             >
               {{ size }}
               :{{ count }}
-              <br :key="size" />
+              <br :key="size"/>
             </slot>
           </template>
 
           <template #[`item.hexValue`]="{ item }">
-            <v-icon large :color="item.columns.hexValue"> mdi-square-rounded </v-icon>
+            <v-icon large :color="item.columns.hexValue"> mdi-square-rounded</v-icon>
           </template>
 
           <template #[`item.colors`]="{ item }">
             <slot
-              v-for="(color, name) in item.columns.colors"
-              :color="color"
-              :name="name"
+                v-for="(color, name) in item.columns.colors"
+                :color="color"
+                :name="name"
             >
-              <v-icon large :color="color"> mdi-square-rounded </v-icon>
-              <br :key="color" />
+              <v-icon large :color="color"> mdi-square-rounded</v-icon>
+              <br :key="color"/>
               {{ color }}
-              <br :key="color" />
+              <br :key="color"/>
             </slot>
           </template>
 
           <template #[`item.price`]="{ item }">
-            <slot> {{ item.columns.price }}$ </slot>
+            <slot> {{ item.columns.price }}$</slot>
           </template>
 
           <template #[`item.totalPrice`]="{ item }">
-            <slot> {{ item.columns.totalPrice }}$ </slot>
+            <slot> {{ item.columns.totalPrice }}$</slot>
           </template>
+
 
           <template #[`item.hidden`]="{ item }">
             <icon-hidden-product v-if="item.columns.hidden"/>
@@ -99,14 +103,14 @@
 
           <template #[`item.actions`]="{ item }">
             <v-btn icon elevation="0" @click="showDialog(item.raw)">
-              <v-icon> mdi-pencil-box-outline </v-icon>
+              <v-icon> mdi-pencil-box-outline</v-icon>
             </v-btn>
           </template>
 
           <template #bottom>
-            <v-divider />
+            <v-divider/>
             <slot name="bottom">
-              <Pagination :total="state.total" :store-path="storePath" />
+              <Pagination :total="state.total" :store-path="storePath"/>
             </slot>
           </template>
         </v-data-table-server>
@@ -116,21 +120,22 @@
 </template>
 
 <script lang="ts">
-import { reactive, watch, onMounted, computed, defineComponent } from 'vue';
-import { Store } from 'vuex';
-import { RootState } from '../../store/Store';
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
-import { watchItems } from '../composables/getItems';
-import { EntityType } from '../../store/entityModules/types';
-import { ITableHeader } from '../../models/filters/Filters';
-import { getEntityStorePath } from '../../store/entityModules/utils';
-import { PropType } from 'vue';
+import {reactive, watch, onMounted, computed, defineComponent} from 'vue';
+import {Store} from 'vuex';
+import {RootState} from '../../store/Store';
+import {useStore} from 'vuex';
+import {useRouter} from 'vue-router';
+import {watchItems} from '../composables/getItems';
+import {EntityType} from '../../store/entityModules/types';
+import {ITableHeader} from '../../models/filters/Filters';
+import {getEntityStorePath} from '../../store/entityModules/utils';
+import {PropType} from 'vue';
 import TableHeader from './TableHeader.vue';
 import Pagination from './Pagination.vue';
-import { VDataTableServer } from 'vuetify/labs/components';
+import {VDataTableServer} from 'vuetify/labs/components';
 import Entity from '@/models/entities/Entity';
 import IconHiddenProduct from './IconHiddenProduct.vue';
+
 interface TableOptions {
   itemsPerPage: number;
   page: number;
@@ -172,7 +177,6 @@ const Component = defineComponent({
     const store: Store<RootState> = useStore();
     const storePath = getEntityStorePath(props.entityType);
     const router = useRouter();
-
     onMounted(() => {
       const searchHeaders = searchableHeaders(props.headers);
       if (searchHeaders.length > 0)
@@ -196,13 +200,13 @@ const Component = defineComponent({
 
     // update module sorting query (sortBy) if sorting changed in table
     watch(
-      () => state.options,
-      (newVal, oldVal) => {
-        if (newVal.sortBy !== oldVal.sortBy) {
-          store.dispatch(`${storePath}/setQuerySorting`, newVal.sortBy);
-        }
-      },
-      { immediate: false, deep: true },
+        () => state.options,
+        (newVal, oldVal) => {
+          if (newVal.sortBy !== oldVal.sortBy) {
+            store.dispatch(`${storePath}/setQuerySorting`, newVal.sortBy);
+          }
+        },
+        {immediate: false, deep: true},
     );
 
     function setOptions(options: TableOptions) {
@@ -220,18 +224,21 @@ const Component = defineComponent({
     async function showDialog(item: any) {
       router.push(router.currentRoute.value.path + `/${item.id}`);
     }
+
     function totalPages() {
       if (!state.total) return 0;
       return (
-        Math.floor(state.total / state.options.itemsPerPage) +
-        (state.total % state.options.itemsPerPage ? 1 : 0)
+          Math.floor(state.total / state.options.itemsPerPage) +
+          (state.total % state.options.itemsPerPage ? 1 : 0)
       );
     }
+
     function getDropdownItems() {
       return [5, 20, 50, 100];
     }
 
     return {
+      BASE_API_URL: import.meta.env.VITE_VUE_APP_API_URL,
       state,
       showDialog,
       storePath,

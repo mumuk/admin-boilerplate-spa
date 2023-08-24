@@ -43,16 +43,25 @@
             />
           </v-col>
 
-          <v-col cols="12">
+          <v-col cols="4">
             <v-checkbox
               v-model="state.entity.hidden"
               label="Hidden"
             ></v-checkbox>
           </v-col>
+          <v-col cols="8" class="flex-0-0">
+            <img
+              v-if="state.entity.thumbnail"
+              :src="`${BASE_API_URL}${state.entity.thumbnail}`"
+              :alt="state.entity.thumbnail.match(/-(\w+)\.jpg$/)?.[1]"
+              width="100"
+              height="100"
+            />
+          </v-col>
           <v-col cols="12">
 
           </v-col>
-          <v-col cols="12">
+          <v-col cols="16">
             <product-tags
               :product-tags=state.entity.tags
               class="border ma-3 pa-1"
@@ -168,9 +177,8 @@ const Component = defineComponent({
     };
 
 
-
-
     return {
+      BASE_API_URL: import.meta.env.VITE_VUE_APP_API_URL,
       allTags,
       productTags,
       handleAddTag,
