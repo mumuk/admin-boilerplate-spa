@@ -17,7 +17,6 @@
               variant="outlined"
               required
               hide-details="auto"
-              :rules="rules.name"
               data-test="product-name"
             />
           </v-col>
@@ -42,26 +41,19 @@
               data-test="product-categoryId"
             />
           </v-col>
-
-          <v-col cols="4">
+          <v-col cols="12" class="d-flex">
+          <v-col cols="4" class="d-flex justify-center align-center">
             <v-checkbox
               v-model="state.entity.hidden"
               label="Hidden"
             ></v-checkbox>
           </v-col>
-          <v-col cols="8" class="flex-0-0">
-            <img
-              v-if="state.entity.thumbnail"
-              :src="`${BASE_API_URL}${state.entity.thumbnail}`"
-              :alt="state.entity.thumbnail.match(/-(\w+)\.jpg$/)?.[1]"
-              width="100"
-              height="100"
-            />
+          <ProductImageManagement
+            :entity-id="state.entity.id"
+            :image-url="state.entity.thumbnail as string"
+          />
           </v-col>
           <v-col cols="12">
-
-          </v-col>
-          <v-col cols="16">
             <product-tags
               :product-tags=state.entity.tags
               class="border ma-3 pa-1"
@@ -88,12 +80,13 @@ import EntityPage from '@/components/common/EntityPage.vue';
 import {defineComponent, onBeforeMount, reactive, watch, computed, ref, Ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {Store, useStore} from 'vuex';
-import {Product} from '../../../models/entities/Product';
+import {Product} from '@/models/entities/Product';
 import ProductTags from "@/components/entities/products/ProductTags.vue";
 import {EntityType} from "@/store/entityModules/types";
 import {RootState} from "@/store/Store";
 import {getEntityStorePath} from "@/store/entityModules/utils";
 import {Tag} from "@/models/entities/Tag";
+import ProductImageManagement from "@/components/entities/products/ProductImageManagement.vue";
 
 interface State {
   entity: Product;
@@ -106,6 +99,7 @@ const Component = defineComponent({
   components: {
     ProductTags,
     EntityPage,
+    ProductImageManagement
   },
 
   props: {
@@ -116,33 +110,29 @@ const Component = defineComponent({
   },
 
   setup(props) {
-    // const store = useStore();
     const router = useRouter();
     const product = new Product({});
     const entityType = EntityType.TAG;
-
     const store: Store<RootState> = useStore();
     const storePath = getEntityStorePath(entityType);
     const productTags = computed(() => state.entity.tags);
+
     const isNew = () => !props.id;
     let listCategory: Ref<string[]> = ref([]);
     let allTags: Ref<Tag[]> = ref([]);
+    const localThumbnail = ref("");
 
     onBeforeMount(async () => {
       if (!isNew()) {
         const res = await store.dispatch(`productsModule/fetchItem`, props.id);
         if (!res) router.back();
       }
+      allTags.value = await store.dispatch('tagsModule/fetchAllItems', undefined);
       listCategory.value = await store.dispatch(
         'categoriesModule/fetchAllItems',
         undefined,
       );
     });
-
-    onBeforeMount(async () => {
-      allTags.value = await store.dispatch('tagsModule/fetchAllItems', undefined);
-    });
-
 
     const state = reactive({
       entity: product,
@@ -161,9 +151,6 @@ const Component = defineComponent({
       const getSelectedItem = store.getters['productsModule/selectedItem'];
       return getSelectedItem.name;
     });
-    const rules = {
-      name: [(v: string) => !!v || 'Name is required'],
-    };
 
     const handleAddTag = (tag: Tag) => {
       const tagIndex = state.entity.tags.findIndex((t) => t.id === tag.id);
@@ -178,16 +165,15 @@ const Component = defineComponent({
 
 
     return {
-      BASE_API_URL: import.meta.env.VITE_VUE_APP_API_URL,
       allTags,
       productTags,
       handleAddTag,
       handleRemoveTag,
       state,
       title,
-      rules,
       isNew,
       listCategory,
+      localThumbnail,
     };
   },
 });
