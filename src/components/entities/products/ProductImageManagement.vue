@@ -1,6 +1,4 @@
 <template>
-
-
   <v-col cols="4" align="center">
     <v-file-input
       v-model="file"
@@ -8,15 +6,20 @@
       label="Upload thumbnail"
       prepend-icon=""
       @change="onFileChange"
+
     ></v-file-input>
+
     <span v-if="message" :class="message.class">{{ message.text }}</span>
 
     <v-btn
       class="w-75 mt-3"
-      :disabled="!file || !isValidSize || !isValidType"
+      :disabled="!isValidSize || !isValidType"
       @click="saveThumbnail"
-    >Save Thumbnail
+    >
+      <span v-if="file">Save Thumbnail</span>
+      <span v-if="!file">Clear Existing Thumbnail</span>
     </v-btn>
+
   </v-col>
 
   <v-col cols="4" align="center">
@@ -40,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, ref} from 'vue';
+import {computed, defineComponent, ref, watch} from 'vue';
 import axios from "axios";
 
 export default defineComponent({
@@ -56,14 +59,14 @@ export default defineComponent({
       default: null
     }
   },
-  emits: ['save-image'],
+  emits: ['save-image', 'clear-image'],
 
   setup(props, {emit}) {
     const localThumbnail = ref("");
     const file = ref(null);
     const isValidSize = ref(true);
     const isValidType = ref(true);
-    const uploadStatus = ref(null)
+    const resultStatus = ref(null)
     const computedImageUrl = `${import.meta.env.VITE_VUE_APP_API_URL}${props.imageUrl}`;
     const imageName = props.imageUrl?.match(/-(\w+)\.jpg$/)?.[1];
 
@@ -82,14 +85,20 @@ export default defineComponent({
         };
       }
 
-      if (uploadStatus.value === 'success') {
+      if (resultStatus.value === 'success') {
         return {
           text: 'Thumbnail saved successfully!',
           class: 'success text-green'
         };
       }
+      if (resultStatus.value === 'delete success') {
+        return {
+          text: 'Thumbnail deleted successfully!',
+          class: 'success text-green'
+        };
+      }
 
-      if (uploadStatus.value === 'error') {
+      if (resultStatus.value === 'error') {
         return {
           text: 'Error uploading the thumbnail. Please try again.',
           class: 'error text-red'
@@ -99,12 +108,14 @@ export default defineComponent({
       return null;
     });
 
+    watch(file, (newFile) => {
+      if (Array.isArray(newFile) && newFile.length === 0) {
+        file.value = null;
+      }
+    });
 
     const onFileChange = e => {
       const selectedFile = e.target.files[0];
-
-
-      if (!selectedFile) return;
 
       isValidSize.value = selectedFile.size <= 1024 * 1024;
 
@@ -119,20 +130,35 @@ export default defineComponent({
     };
 
     const saveThumbnail = async () => {
-      const formData = new FormData();
-      formData.append('thumbnail', file.value[0]);
-
-      try {
-        const res = await axios.post(`http://127.0.0.1:3030/products/${props.entityId}/thumbnail`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+      if (!file.value && props.imageUrl) {
+        try {
+          const res = await axios.delete(`http://127.0.0.1:3030/products/${props.entityId}/thumbnail`, {});
+          if (res.status === 204) {
+            resultStatus.value = 'delete success';
+            emit('save-image', '');
+            localThumbnail.value = null;
           }
-        });
-        uploadStatus.value = 'success';
-        const filePath = `uploads/${res.data.filename}`;
-        emit('save-image', filePath);
-      } catch (error) {
-        uploadStatus.value = 'error';
+        } catch (e) {
+          resultStatus.value = 'error';
+        }
+      }
+
+      const formData = new FormData();
+      if (file.value) {
+        formData.append('thumbnail', file.value[0]);
+
+        try {
+          const res = await axios.post(`http://127.0.0.1:3030/products/${props.entityId}/thumbnail`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          resultStatus.value = 'success';
+          const filePath = `uploads/${res.data.filename}`;
+          emit('save-image', filePath);
+        } catch (error) {
+          resultStatus.value = 'error';
+        }
       }
     };
 

@@ -52,6 +52,7 @@
             :entity-id="state.entity.id"
             :image-url="state.entity.thumbnail as string"
             @save-image="saveThumbnail"
+            @clear-image="saveThumbnail"
           />
           </v-col>
           <v-col cols="12">
@@ -164,11 +165,7 @@ const Component = defineComponent({
       state.entity.tagIds = state.entity.tagIds.filter((id) => id !== tag.id);
     };
 
-    const saveThumbnail = (url:string) => {
-      console.log("url", url)
-      state.entity.thumbnail = url;
-    };
-
+    const saveThumbnail = (url:string) => state.entity.thumbnail = url;
 
     return {
       allTags,
