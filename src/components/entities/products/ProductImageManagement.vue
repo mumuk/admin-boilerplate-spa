@@ -56,8 +56,9 @@ export default defineComponent({
       default: null
     }
   },
+  emits: ['save-image'],
 
-  setup(props) {
+  setup(props, {emit}) {
     const localThumbnail = ref("");
     const file = ref(null);
     const isValidSize = ref(true);
@@ -122,12 +123,14 @@ export default defineComponent({
       formData.append('thumbnail', file.value[0]);
 
       try {
-        await axios.post(`http://127.0.0.1:3030/products/${props.entityId}/thumbnail`, formData, {
+        const res = await axios.post(`http://127.0.0.1:3030/products/${props.entityId}/thumbnail`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
         uploadStatus.value = 'success';
+        const filePath = `uploads/${res.data.filename}`;
+        emit('save-image', filePath);
       } catch (error) {
         uploadStatus.value = 'error';
       }
